@@ -14,3 +14,11 @@ function compose(callable ...$fns): callable {
     );
 }
 
+function curryN(int $arity, callable $fn): callable {
+    return function (...$args) use ($fn, $arity) {
+        if (count($args) >= $arity) {
+            return $fn(...$args);
+        }
+        return curryN($arity - count($args), fn(...$rest) => $fn(...$args, ...$rest));
+    };
+}
