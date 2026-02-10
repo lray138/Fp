@@ -13,3 +13,4 @@ function compose(callable ...$fns): callable {
         'lray138\\Fp\\identity'
     );
 }
+
