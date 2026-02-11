@@ -1,10 +1,12 @@
 {
   "name": "lray138/fp",
   "description": "Zero to Fun - Functional Programming in PHP.",
+  "version": "0.0.5",
   "type": "library",
   "license": "MIT",
   "require": {
-    "php": ">=8.2"
+    "php": ">=8.2",
+    "functional-php/fantasy-land": "^1"
   },
   "autoload": {
     "psr-4": {

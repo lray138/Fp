@@ -2,6 +2,9 @@
 
 namespace lray138\Fp;
 
+use FunctionalPHP\FantasyLand\Functor as Functor;
+use FunctionalPHP\FantasyLand\Pointed;
+
 function identity($value) {
     return $value;
 }
@@ -24,20 +27,16 @@ function curryN(int $arity, callable $fn): callable {
 }
 
 // program to an interface, not an implementation
-interface Functor {
-    public function map(callable $fn): static;
-}
-
-final class IdentityFunctor implements Functor {
+final class IdentityFunctor implements Functor, Pointed {
     public function __construct(private mixed $value) {}
 
     // pointed, lifting into context
-    public static function of(mixed $value): static {
+    public static function of($value): static {
         return new static($value);
     }
 
-    public function map(callable $fn): static {
-        return new static($fn($this->value));
+    public function map(callable $fn): Functor {
+        return new static($fn($this->unwrap()));
     }
 
     public function unwrap(): mixed {
