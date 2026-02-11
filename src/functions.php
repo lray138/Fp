@@ -23,18 +23,24 @@ function curryN(int $arity, callable $fn): callable {
     };
 }
 
+// program to an interface, not an implementation
 interface Functor {
     public function map(callable $fn): static;
 }
 
-final class Box implements Functor {
+final class IdentityFunctor implements Functor {
     public function __construct(private mixed $value) {}
+
+    // pointed, lifting into context
+    public static function of(mixed $value): static {
+        return new static($value);
+    }
 
     public function map(callable $fn): static {
         return new static($fn($this->value));
     }
 
-    public function value(): mixed {
+    public function unwrap(): mixed {
         return $this->value;
     }
 }
