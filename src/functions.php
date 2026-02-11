@@ -22,3 +22,19 @@ function curryN(int $arity, callable $fn): callable {
         return curryN($arity - count($args), fn(...$rest) => $fn(...$args, ...$rest));
     };
 }
+
+interface Functor {
+    public function map(callable $fn): static;
+}
+
+final class Box implements Functor {
+    public function __construct(private mixed $value) {}
+
+    public function map(callable $fn): static {
+        return new static($fn($this->value));
+    }
+
+    public function value(): mixed {
+        return $this->value;
+    }
+}

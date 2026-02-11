@@ -3,3 +3,4 @@ docs/
 vendor/
 composer.lock
 fp/
+.DS_Store
