@@ -46,53 +46,59 @@ final class IdentityFunctor implements Functor, Pointed {
     }
 }
 
-final class Maybe implements Apply, Chain, Pointed {
-    private function __construct(private bool $isNothing, private mixed $value = null) {}
-
-    public static function just(mixed $value): static {
-        return new static(false, $value);
+abstract class Maybe implements Apply, Chain, Pointed {
+    public static function just(mixed $value): self {
+        return new Just($value);
     }
 
-    public static function nothing(): static {
-        return new static(true);
+    public static function nothing(): self {
+        return new Nothing();
     }
 
     // pointed, lifting into context (null becomes nothing)
-    public static function of($value): static {
+    public static function of($value): self {
         return $value === null ? static::nothing() : static::just($value);
     }
 
+    abstract public function isNothing(): bool;
+
+    abstract protected function value(): mixed;
+
+    public function unwrap(): mixed {
+        return $this->value();
+    }
+
     public function map(callable $fn): Functor {
-        if ($this->isNothing) {
+        if ($this->isNothing()) {
             return $this;
         }
 
-        return static::just($fn($this->value));
+        return new Just($fn($this->value()));
     }
 
     public function ap(Apply $b): Apply {
-        if ($this->isNothing || ($b instanceof self && $b->isNothing)) {
-            return static::nothing();
-        }
-
-        $fn = $this->value;
-        if (!is_callable($fn)) {
-            throw new \InvalidArgumentException('Maybe::ap expects a callable');
-        }
-
         if (!$b instanceof self) {
             throw new \InvalidArgumentException('Maybe::ap expects a Maybe');
         }
 
-        return static::just($fn($b->value));
+        if ($this->isNothing() || $b->isNothing()) {
+            return static::nothing();
+        }
+
+        $fn = $this->value();
+        if (!is_callable($fn)) {
+            throw new \InvalidArgumentException('Maybe::ap expects a callable');
+        }
+
+        return static::just($fn($b->value()));
     }
 
     public function bind(callable $function) {
-        if ($this->isNothing) {
+        if ($this->isNothing()) {
             return $this;
         }
 
-        $result = $function($this->value);
+        $result = $function($this->value());
         if (!$result instanceof self) {
             throw new \InvalidArgumentException('Maybe::bind expects a Maybe');
         }
@@ -101,14 +107,29 @@ final class Maybe implements Apply, Chain, Pointed {
     }
 
     public function getOrElse(mixed $default): mixed {
-        return $this->isNothing ? $default : $this->value;
-    }
-
-    public function unwrap(): mixed {
-        return $this->value;
-    }
-
-    public function isNothing(): bool {
-        return $this->isNothing;
+        return $this->isNothing() ? $default : $this->value();
     }
 }
+
+final class Just extends Maybe {
+    public function __construct(private mixed $value) {}
+
+    public function isNothing(): bool {
+        return false;
+    }
+
+    protected function value(): mixed {
+        return $this->value;
+    }
+}
+
+final class Nothing extends Maybe {
+    public function isNothing(): bool {
+        return true;
+    }
+
+    protected function value(): mixed {
+        return null;
+    }
+}
+
